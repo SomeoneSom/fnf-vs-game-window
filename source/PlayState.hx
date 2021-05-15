@@ -1270,18 +1270,11 @@ class PlayState extends MusicBeatState
 	var framesElapsed:Int = 0;
 	var vertDist:Int = 0;
 	var startingY:Int = 0;
+	var sineTime:Int = 0;
+	var firstSongPos:Int = 0;
 
 	// for temp storage
 
-	function realSineWave():Void {
-		framesElapsed += 1;
-		var newX:Int = Lib.application.window.x + pixelsToMovePerFrame;
-		if (newX > Lib.application.window.display.bounds.width) {
-			newX = Lib.application.window.width * -1;
-		}
-		var newY:Int = startingY + Std.int(vertDist * Math.sin(Math.PI * (fractionOfPiPerFrame * framesElapsed)));
-		Lib.application.window.move(newX, newY);
-	}
 
 	function startCountdown():Void
 	{
@@ -1556,7 +1549,7 @@ class PlayState extends MusicBeatState
 					bounceY = Math.floor(bounceFirstY / 2);
 				});
 
-				Lua_helper.add_callback(lua, "sineWave", function(fOPPF:Float, amp:Float, pxTMPF:Int, centerFirst:Bool = true) {
+				Lua_helper.add_callback(lua, "sineWave", function(fOPPF:Float, amp:Float, pxTMPF:Int, ss:Int, centerFirst:Bool = true) {
 					if (centerFirst) {
 						callLua('centerWin', []);
 					}
@@ -1568,14 +1561,10 @@ class PlayState extends MusicBeatState
 					vertDist = Std.int(Math.min(Lib.application.window.y,
 						Lib.application.window.display.bounds.height - (Lib.application.window.y + Lib.application.window.height)) / 2);
 					startingY = Lib.application.window.y;
+					sineTime = Std.int(ss * Conductor.stepCrochet);
+					firstSongPos = Std.int(Conductor.songPosition);
 				});
 
-				Lua_helper.add_callback(lua, "stopSine", function(centerAfter:Bool = true) {
-					waveyMaybe = false;
-					if (centerAfter) {
-						callLua('centerWin', []);
-					}
-				});
 	
 				for (i in 0...strumLineNotes.length) {
 					var member = strumLineNotes.members[i];
@@ -2179,11 +2168,26 @@ class PlayState extends MusicBeatState
 			setVar("appScale", Lib.application.window.scale);
 			setVar("appWidth", Lib.application.window.width);
 			setVar("appHeight", Lib.application.window.height);
-			setVar("appX", (Lib.application.window.display.bounds.width-Lib.application.window.width)/2);
-			setVar("appY", (Lib.application.window.display.bounds.height-Lib.application.window.height)/2);
+			setVar("appX", Lib.application.window.x);
+			setVar("appY", Lib.application.window.y);
 			callLua('update', [elapsed]);
 			if (waveyMaybe) {
-				realSineWave();
+				var msElapsed = Conductor.songPosition - firstSongPos;
+				if (msElapsed >= sineTime) {
+					waveyMaybe = false;
+				}
+				var lastetete = framesElapsed;
+				framesElapsed = Std.int(msElapsed / ((1/120) * 1000));
+				var newX:Int = Lib.application.window.x + pixelsToMovePerFrame * (framesElapsed - lastetete);
+				if (newX > Lib.application.window.display.bounds.width) {
+					newX = Lib.application.window.width * -1;
+				}
+				var newY:Int = startingY + Std.int(amplitude * vertDist * Math.sin(Math.PI * (fractionOfPiPerFrame * framesElapsed)));
+				if (waveyMaybe) {
+					Lib.application.window.move(newX, newY);
+				} else {
+					callLua('centerWin', []);
+				}
 			}
 			if (weBouncin) {
 				if (bounceCount > 2 || (bounceCount == 2 && bounceCounterStep == 2)) {
@@ -2203,7 +2207,6 @@ class PlayState extends MusicBeatState
 						bounceCount = 1;
 					}
 				}
-				trace(bounceCount);
 				if (bounceCount == 1) {
 					bounceCounterStep *= 4;
 				} else if (bounceCount == 4 && bounceCounterStep == 2) {

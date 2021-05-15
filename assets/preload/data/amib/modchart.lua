@@ -18,10 +18,6 @@ function realBounce(changeX, changeY, frames, i, firstX, firstY, distX, distY)
     ffi.C.Sleep(math.floor(1000 * frames / 120))
 end
 function centerWin()
-    print((displayWidth / 2) - (appWidth / 2))
-    print((displayHeight / 2) - (appHeight / 2))
-    print(appWidth)
-    print(appHeight)
     moveWindow((displayWidth / 2) - (appWidth / 2), (displayHeight / 2) - (appHeight / 2), appWidth, appHeight)
 end
 function update(elapsed)
@@ -37,5 +33,11 @@ function stepHit(step)
         elseif math.fmod(curStep, 2) == 0 then
             bounce(-0.1, 0)
         end
+    end
+    if curStep == 320 then
+        sineWave(1/60, 1, appX/40, 56)
+    end
+    if curStep == 384 then
+        sineWave(1/60, 1, appX/30, 48)
     end
 end
