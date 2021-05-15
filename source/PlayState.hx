@@ -1246,8 +1246,11 @@ class PlayState extends MusicBeatState
 		});
 	}
 
+	// tf are these for?
 	var startTimer:FlxTimer;
 	var perfectMode:Bool = false;
+
+	// for the bouncing effect
 	var weBouncin:Bool = false;
 	var bounceWait:Int = 0;
 	var bounceCount:Float = 0;
@@ -1258,6 +1261,16 @@ class PlayState extends MusicBeatState
 	var bounceChangeY:Float = 0;
 	var bounceFirstX:Int = 0;
 	var bounceFirstY:Int = 0;
+
+	// for sine wave effect
+	var waveyMaybe:Bool = false;
+	var fractionOfPiPerFrame:Float = 0;
+	var amplitude:Float = 0;
+	var pixelsToMovePerFrame:Int = 0;
+	var framesElapsed:Int = 0;
+	var vertDist:Int = 0;
+
+	// for temp storage
 
 	function startCountdown():Void
 	{
@@ -1321,8 +1334,8 @@ class PlayState extends MusicBeatState
 				setVar("displayHeight", Lib.application.window.display.bounds.height);
 				setVar("appWidth", Lib.application.window.width);
 				setVar("appHeight", Lib.application.window.height);
-				setVar("appX", (Lib.application.window.display.bounds.width-Lib.application.window.width)/2);
-				setVar("appY", (Lib.application.window.display.bounds.height-Lib.application.window.height)/2);
+				setVar("appX", Lib.application.window.x);
+				setVar("appY", Lib.application.window.y);
 	
 				// callbacks
 	
@@ -1530,6 +1543,19 @@ class PlayState extends MusicBeatState
 					bounceFirstY = Math.floor((Lib.application.window.display.bounds.height-Lib.application.window.height)/2);
 					bounceX = Math.floor(bounceFirstX / 2);
 					bounceY = Math.floor(bounceFirstY / 2);
+				});
+
+				Lua_helper.add_callback(lua, "sineWave", function(fOPPF:Float, amp:Float, pxTMPF:Int, centerFirst:Bool = true) {
+					if (centerFirst) {
+						callLua('centerWin', []);
+					}
+					fractionOfPiPerFrame = fOPPF;
+					amplitude = amp;
+					pixelsToMovePerFrame = pxTMPF;
+					framesElapsed = 0;
+					waveyMaybe = true;
+					vertDist = Std.int(Math.min(Lib.application.window.y,
+						Lib.application.window.display.bounds.height - (Lib.application.window.y + Lib.application.window.height)) / 2);
 				});
 	
 				for (i in 0...strumLineNotes.length) {
