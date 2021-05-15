@@ -1519,7 +1519,7 @@ class PlayState extends MusicBeatState
 					Lib.application.window.move(x, y);
 				});
 
-				Lua_helper.add_callback(lua, "bounce", function(cx:Int, cy:Int, frames:Int = 3) {
+				Lua_helper.add_callback(lua, "bounce", function(cx:Float, cy:Float, frames:Int = 3) {
 					weBouncin = true;
 					bounceChangeX = cx;
 					bounceChangeY = cy;
