@@ -1269,8 +1269,19 @@ class PlayState extends MusicBeatState
 	var pixelsToMovePerFrame:Int = 0;
 	var framesElapsed:Int = 0;
 	var vertDist:Int = 0;
+	var startingY:Int = 0;
 
 	// for temp storage
+
+	function realSineWave():Void {
+		framesElapsed += 1;
+		var newX:Int = Lib.application.window.x + pixelsToMovePerFrame;
+		if (newX > Lib.application.window.display.bounds.width) {
+			newX = Lib.application.window.width * -1;
+		}
+		var newY:Int = startingY + Std.int(vertDist * Math.sin(Math.PI * (fractionOfPiPerFrame * framesElapsed)));
+		Lib.application.window.move(newX, newY);
+	}
 
 	function startCountdown():Void
 	{
@@ -1556,6 +1567,14 @@ class PlayState extends MusicBeatState
 					waveyMaybe = true;
 					vertDist = Std.int(Math.min(Lib.application.window.y,
 						Lib.application.window.display.bounds.height - (Lib.application.window.y + Lib.application.window.height)) / 2);
+					startingY = Lib.application.window.y;
+				});
+
+				Lua_helper.add_callback(lua, "stopSine", function(centerAfter:Bool = true) {
+					waveyMaybe = false;
+					if (centerAfter) {
+						callLua('centerWin', []);
+					}
 				});
 	
 				for (i in 0...strumLineNotes.length) {
@@ -2163,6 +2182,9 @@ class PlayState extends MusicBeatState
 			setVar("appX", (Lib.application.window.display.bounds.width-Lib.application.window.width)/2);
 			setVar("appY", (Lib.application.window.display.bounds.height-Lib.application.window.height)/2);
 			callLua('update', [elapsed]);
+			if (waveyMaybe) {
+				realSineWave();
+			}
 			if (weBouncin) {
 				if (bounceCount > 2 || (bounceCount == 2 && bounceCounterStep == 2)) {
 					bounceCount -= bounceCounterStep == 2 ? -1 : 1;
