@@ -1274,7 +1274,7 @@ class PlayState extends MusicBeatState
 	var firstSongPos:Int = 0;
 
 	// for temp storage
-
+	var globalButNot:Array<Int> = [];
 
 	function startCountdown():Void
 	{
@@ -1565,6 +1565,15 @@ class PlayState extends MusicBeatState
 					firstSongPos = Std.int(Conductor.songPosition);
 				});
 
+				Lua_helper.add_callback(lua, 'setStorage', function(val1:Int, val2:Int) {
+					globalButNot.push(val1);
+					globalButNot.push(val2);
+				});
+
+				Lua_helper.add_callback(lua, 'getStorage', function() {
+					Lib.application.window.resize(Std.int(globalButNot[0]), Std.int(globalButNot[1]));
+					callLua('centerWin', []);
+				});
 	
 				for (i in 0...strumLineNotes.length) {
 					var member = strumLineNotes.members[i];
